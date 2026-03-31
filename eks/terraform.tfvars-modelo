@@ -1,0 +1,19 @@
+aws_region         = "us-east-1"
+cluster_name       = "eks-lab-min"
+kubernetes_version = "1.31"
+
+# Guardrails de custo
+desired_size        = 1
+min_size            = 0
+max_size            = 1
+node_instance_types = ["t3.small"]
+node_capacity_type  = "SPOT"
+node_disk_size      = 20
+
+# Restrinja para seu IP quando possível (exemplo)
+public_access_cidrs = ["0.0.0.0/0"]
+
+# Budget opcional (recomendado)
+create_cost_budget     = false
+monthly_budget_limit_usd = "10"
+budget_alert_email     = ""
