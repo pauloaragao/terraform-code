@@ -1,0 +1,23 @@
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "BedrockAgentManage",
+			"Effect": "Allow",
+			"Action": [
+				"bedrock:CreateAgent",
+				"bedrock:GetAgent",
+				"bedrock:UpdateAgent",
+				"bedrock:DeleteAgent",
+				"bedrock:PrepareAgent",
+				"bedrock:CreateAgentAlias",
+				"bedrock:GetAgentAlias",
+				"bedrock:DeleteAgentAlias",
+				"bedrock:ListTagsForResource",
+				"bedrock:TagResource",
+				"bedrock:UntagResource"
+			],
+			"Resource": "*"
+		}
+	]
+}

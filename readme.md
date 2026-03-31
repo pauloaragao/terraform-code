@@ -1,153 +1,104 @@
-# Terraform Settings
+# Terraform AWS Labs
 
-O bloco `terraform {}` configura o comportamento global do Terraform, como a versão mínima exigida e os providers necessários.
+Repositório com laboratórios de infraestrutura AWS usando Terraform, organizados por módulo.
 
-```hcl
-terraform {
-  required_version = ">= 1.5.0"
+## Estrutura do projeto
 
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-  }
+- `ec2/`: EC2 Free Tier com acesso via SSM
+- `rds/`: PostgreSQL RDS Free Tier
+- `lambda/`: Lambda Python com IAM e CloudWatch Logs
+- `bedrock/`: módulo mínimo para Bedrock Agent
+- `local/`: laboratório local de apoio
 
-  # Backend remoto para armazenar o state
-  backend "s3" {
-    bucket = "meu-bucket-terraform"
-    key    = "prod/terraform.tfstate"
-    region = "us-east-1"
-  }
-}
+Cada módulo segue o padrão:
+
+- `providers.tf`: versão do Terraform/provider e provider AWS
+- `variables.tf`: variáveis de entrada
+- `datasources.tf`: blocos `data` para leitura de recursos existentes
+- `main.tf`: recursos principais (`resource`)
+- `outputs.tf` ou `output.tf`: saídas úteis
+- `terraform.tfvars-modelo`: modelo de variáveis para uso local
+
+## Pré-requisitos
+
+- Terraform `>= 1.5.0`
+- AWS CLI configurado (`aws configure`)
+- Permissões IAM para cada módulo
+
+## Fluxo padrão por módulo
+
+Execute a partir da raiz do repositório:
+
+```powershell
+terraform -chdir=<modulo> init
+terraform -chdir=<modulo> validate
+terraform -chdir=<modulo> plan
+terraform -chdir=<modulo> apply
 ```
 
-- `required_version` — garante que todos usem uma versão compatível do Terraform.
-- `required_providers` — declara os providers e suas versões.
-- `backend` — define onde o arquivo de estado (`.tfstate`) será armazenado.
+Para destruir recursos:
 
----
-
-# Resource
-
-O bloco `resource` é usado para **criar, atualizar e destruir** infraestrutura. É o bloco principal do Terraform.
-
-```hcl
-resource "aws_instance" "web" {
-  ami           = "ami-0c55b159cbfafe1f0"
-  instance_type = "t3.micro"
-
-  tags = {
-    Name = "web-server"
-  }
-}
+```powershell
+terraform -chdir=<modulo> destroy
 ```
 
-- Sintaxe: `resource "<tipo>" "<nome_local>" {}`
-- O tipo é composto por `<provider>_<recurso>` (ex: `aws_instance`, `azurerm_virtual_machine`).
-- O nome local é usado para referenciar o recurso internamente: `aws_instance.web.id`.
-- Terraform gerencia o ciclo de vida completo: **create → update → destroy**.
+Exemplo para EC2:
 
----
-
-# Data Source
-
-O bloco `data` permite **consultar informações de recursos já existentes** sem gerenciá-los. É somente leitura.
-
-```hcl
-data "aws_vpc" "existing" {
-  filter {
-    name   = "tag:Name"
-    values = ["my-vpc"]
-  }
-}
-
-resource "aws_subnet" "example" {
-  vpc_id     = data.aws_vpc.existing.id
-  cidr_block = "10.0.1.0/24"
-}
+```powershell
+terraform -chdir=ec2 init
+terraform -chdir=ec2 apply
 ```
 
-- Sintaxe: `data "<tipo>" "<nome_local>" {}`
-- Referenciado como `data.<tipo>.<nome>.<atributo>`.
-- Útil para referenciar recursos criados manualmente, por outro time ou outro workspace.
-- **Não cria nem modifica** recursos, apenas lê dados do provider.
+## Variáveis e tfvars
 
-| | `resource` | `data` |
-|---|---|---|
-| Gerencia ciclo de vida | Sim | Não |
-| Cria / altera / destrói | Sim | Não |
-| Apenas lê | Não | Sim |
+- Arquivos `terraform.tfvars` ficam ignorados no Git por segurança
+- Use `terraform.tfvars-modelo` como base para criar `terraform.tfvars` local
 
----
+Exemplo:
 
-# Variables
-
-Variáveis permitem **parametrizar** configurações, tornando o código reutilizável e flexível.
-
-```hcl
-variable "instance_type" {
-  description = "Tipo da instância EC2"
-  type        = string
-  default     = "t3.micro"
-}
-
-variable "environment" {
-  description = "Ambiente de deploy"
-  type        = string
-  # sem default: será solicitado na execução
-}
-
-variable "allowed_ports" {
-  description = "Lista de portas liberadas"
-  type        = list(number)
-  default     = [80, 443]
-}
+```powershell
+Copy-Item .\ec2\terraform.tfvars-modelo .\ec2\terraform.tfvars
 ```
 
-Referenciando uma variável:
+## Módulos
 
-```hcl
-resource "aws_instance" "web" {
-  instance_type = var.instance_type
-}
+### EC2
+
+- Cria instância EC2 `t3.micro`
+- Usa IAM Role + Instance Profile para acesso via Session Manager
+- Não depende de SSH público
+
+### RDS
+
+- Cria PostgreSQL no Free Tier
+- Configura DB Subnet Group e Security Group
+- Exporta endpoint e porta via outputs
+
+### Lambda
+
+- Empacota código Python em `lambda/src`
+- Cria função Lambda, role de execução e log group
+- Mantém configuração otimizada para laboratório
+
+### Bedrock
+
+- Cria role IAM de execução para agente
+- Cria `aws_bedrockagent_agent`
+- Cria `aws_bedrockagent_agent_alias`
+
+Observação de custo: Bedrock é pay-per-use. Não tratar como custo zero.
+
+## Segurança
+
+- Não versionar credenciais, senhas ou `terraform.tfvars`
+- Manter `.gitignore` atualizado
+- Preferir policies IAM de menor privilégio possível
+
+## Comandos úteis
+
+```powershell
+terraform -chdir=<modulo> output
+terraform -chdir=<modulo> state list
+terraform -chdir=<modulo> fmt
 ```
-
-Formas de passar valores:
-- Arquivo `terraform.tfvars` ou `*.auto.tfvars`
-- Flag `-var="chave=valor"` na linha de comando
-- Variáveis de ambiente: `TF_VAR_<nome>`
-- Interativamente no terminal (quando sem `default`)
-
-Tipos suportados: `string`, `number`, `bool`, `list()`, `map()`, `set()`, `object()`, `tuple()`.
-
----
-
-# Outputs
-
-O bloco `output` **expõe valores** do estado do Terraform, útil para exibir informações após o apply ou para compartilhar dados entre módulos.
-
-```hcl
-output "instance_public_ip" {
-  description = "IP público da instância EC2"
-  value       = aws_instance.web.public_ip
-}
-
-output "vpc_id" {
-  description = "ID da VPC criada"
-  value       = aws_vpc.main.id
-  sensitive   = false
-}
-
-output "db_password" {
-  description = "Senha do banco de dados"
-  value       = aws_db_instance.main.password
-  sensitive   = true  # oculta o valor no terminal
-}
-```
-
-- Exibidos ao final do `terraform apply`.
-- Consultados com `terraform output <nome>`.
-- `sensitive = true` oculta o valor nos logs (mas ainda armazena no state).
-- Em módulos, outputs são referenciados como `module.<nome_modulo>.<output>`.
 
