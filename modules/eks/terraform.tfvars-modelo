@@ -17,3 +17,4 @@ public_access_cidrs = ["0.0.0.0/0"]
 create_cost_budget     = false
 monthly_budget_limit_usd = "10"
 budget_alert_email     = ""
+prevent_destroy        = false
