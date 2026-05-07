@@ -125,6 +125,121 @@ Para uso pela raiz:
 Copy-Item .\terraform.tfvars-modelo .\terraform.tfvars
 ```
 
+## Workspaces Terraform por ambiente (DEV, HK, PROD)
+
+Este repositório já está preparado para uso com `terraform workspace` no backend local.
+Cada workspace mantém state isolado, evitando conflito entre ambientes.
+
+### Conceitos rápidos
+
+- `default`: workspace padrão inicial
+- `DEV`, `HK`, `PROD`: ambientes separados com state independente
+- State local por workspace: `terraform.tfstate.d/<workspace>/terraform.tfstate`
+
+### 1. Inicializar o projeto (raiz)
+
+```powershell
+terraform init
+```
+
+### 2. Criar workspaces (uma vez)
+
+```powershell
+terraform workspace new DEV
+terraform workspace new HK
+terraform workspace new PROD
+```
+
+Se já existirem, o Terraform exibirá aviso. Sem problema.
+
+### 3. Listar e selecionar workspace
+
+```powershell
+terraform workspace list
+terraform workspace select DEV
+```
+
+### 4. Executar plan/apply por ambiente
+
+Recomendação: usar um arquivo de variáveis por ambiente.
+
+Exemplos de nomes:
+
+- `terraform.dev.tfvars`
+- `terraform.hk.tfvars`
+- `terraform.prod.tfvars`
+
+Exemplo DEV:
+
+```powershell
+terraform workspace select DEV
+terraform plan  -var-file="terraform.dev.tfvars"
+terraform apply -var-file="terraform.dev.tfvars"
+```
+
+Exemplo HK:
+
+```powershell
+terraform workspace select HK
+terraform plan  -var-file="terraform.hk.tfvars"
+terraform apply -var-file="terraform.hk.tfvars"
+```
+
+Exemplo PROD:
+
+```powershell
+terraform workspace select PROD
+terraform plan  -var-file="terraform.prod.tfvars"
+terraform apply -var-file="terraform.prod.tfvars"
+```
+
+### 5. Destruir recursos por ambiente (com cuidado)
+
+```powershell
+terraform workspace select DEV
+terraform destroy -var-file="terraform.dev.tfvars"
+```
+
+### Boas práticas de workspace
+
+- Sempre confirme o ambiente antes do `apply`:
+
+```powershell
+terraform workspace show
+```
+
+- Evite usar o workspace `default` para ambientes reais
+- Mantenha variáveis sensíveis fora do Git
+- Faça `plan` antes de `apply` em todos os ambientes
+
+### Exemplo rápido de bootstrap completo
+
+```powershell
+terraform init
+terraform workspace new DEV
+terraform workspace new HK
+terraform workspace new PROD
+
+terraform workspace select DEV
+terraform apply -var-file="terraform.dev.tfvars"
+```
+
+## Uso com workspace dentro de módulos (opcional)
+
+Se você executar módulos diretamente com `-chdir`, o workspace é local daquele módulo.
+
+Exemplo no módulo EC2:
+
+```powershell
+terraform -chdir=modules/ec2 init
+terraform -chdir=modules/ec2 workspace new DEV
+terraform -chdir=modules/ec2 workspace select DEV
+terraform -chdir=modules/ec2 plan -var-file="terraform.tfvars"
+terraform -chdir=modules/ec2 apply -var-file="terraform.tfvars"
+```
+
+Use este modo quando quiser isolamento de state por módulo e por ambiente ao mesmo tempo.
+
 ## Módulos
 
 ### EC2

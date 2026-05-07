@@ -1,6 +1,11 @@
+# Gera nomes unicos por workspace para evitar colisoes entre ambientes.
+locals {
+  workspace_suffix = lower(terraform.workspace)
+}
+
 # Role IAM para SSM (Session Manager)
 resource "aws_iam_role" "ec2_ssm_role" {
-  name = "ec2-ssm-role-example"
+  name = "ec2-ssm-role-${local.workspace_suffix}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -22,13 +27,13 @@ resource "aws_iam_role_policy_attachment" "ssm_core" {
 
 # Instance Profile para a EC2
 resource "aws_iam_instance_profile" "ec2_ssm_profile" {
-  name = "ec2-ssm-profile-example"
+  name = "ec2-ssm-profile-${local.workspace_suffix}"
   role = aws_iam_role.ec2_ssm_role.name
 }
 
 # Security Group (sem entrada pública; acesso via SSM)
 resource "aws_security_group" "ec2_ssm" {
-  name        = "ec2-ssm-only"
+  name        = "ec2-ssm-only-${local.workspace_suffix}"
   description = "Sem entrada publica; acesso via SSM"
   vpc_id      = data.aws_vpc.default.id
 
@@ -40,7 +45,7 @@ resource "aws_security_group" "ec2_ssm" {
   }
 
   tags = {
-    Name = "ec2-ssm-security-group"
+    Name = "ec2-ssm-security-group-${local.workspace_suffix}"
   }
 }
 

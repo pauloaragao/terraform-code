@@ -1,5 +1,10 @@
+locals {
+  workspace_suffix      = lower(terraform.workspace)
+  lambda_function_name  = "${var.function_name}-${local.workspace_suffix}"
+}
+
 resource "aws_iam_role" "lambda_exec" {
-  name               = "${var.function_name}-exec-role"
+  name               = "${local.lambda_function_name}-exec-role"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
 }
 
@@ -9,7 +14,7 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_logs" {
 }
 
 resource "aws_lambda_function" "main" {
-  function_name    = var.function_name
+  function_name    = local.lambda_function_name
   role             = aws_iam_role.lambda_exec.arn
   runtime          = "python3.12"
   handler          = "handler.lambda_handler"
@@ -27,6 +32,6 @@ resource "aws_lambda_function" "main" {
 }
 
 resource "aws_cloudwatch_log_group" "lambda_logs" {
-  name              = "/aws/lambda/${var.function_name}"
+  name              = "/aws/lambda/${local.lambda_function_name}"
   retention_in_days = 7
 }

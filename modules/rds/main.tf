@@ -1,15 +1,19 @@
+locals {
+  workspace_suffix = lower(terraform.workspace)
+}
+
 resource "aws_db_subnet_group" "main" {
-  name       = "rds-free-tier-subnet-group"
+  name       = "rds-free-tier-subnet-group-${local.workspace_suffix}"
   subnet_ids = data.aws_subnets.default.ids
 
   tags = {
-    Name      = "rds-free-tier-subnet-group"
+    Name      = "rds-free-tier-subnet-group-${local.workspace_suffix}"
     ManagedBy = "Terraform"
   }
 }
 
 resource "aws_security_group" "rds" {
-  name        = "rds-free-tier-sg"
+  name        = "rds-free-tier-sg-${local.workspace_suffix}"
   description = "Permite conexao ao RDS pela porta 5432"
   vpc_id      = data.aws_vpc.default.id
 
@@ -29,13 +33,13 @@ resource "aws_security_group" "rds" {
   }
 
   tags = {
-    Name      = "rds-free-tier-sg"
+    Name      = "rds-free-tier-sg-${local.workspace_suffix}"
     ManagedBy = "Terraform"
   }
 }
 
 resource "aws_db_instance" "free_tier" {
-  identifier              = "rds-free-tier-postgres"
+  identifier              = "rds-free-tier-postgres-${local.workspace_suffix}"
   engine                  = "postgres"
   engine_version          = "17"
   instance_class          = "db.t3.micro"
@@ -57,7 +61,7 @@ resource "aws_db_instance" "free_tier" {
   skip_final_snapshot     = true
 
   tags = {
-    Name      = "rds-free-tier-postgres"
+    Name      = "rds-free-tier-postgres-${local.workspace_suffix}"
     ManagedBy = "Terraform"
   }
 }

@@ -1,13 +1,17 @@
 locals {
+  workspace_suffix = lower(terraform.workspace)
+  cluster_name     = "${var.cluster_name}-${local.workspace_suffix}"
+  node_group_name  = "${var.node_group_name}-${local.workspace_suffix}"
+
   tags = {
-    Project     = "eks-lab"
+    Project     = local.cluster_name
     ManagedBy   = "Terraform"
     CostControl = "apply-destroy"
   }
 }
 
 resource "aws_iam_role" "eks_cluster" {
-  name               = "${var.cluster_name}-cluster-role"
+  name               = "${local.cluster_name}-cluster-role"
   assume_role_policy = data.aws_iam_policy_document.eks_cluster_assume_role.json
   tags               = local.tags
 }
@@ -18,7 +22,7 @@ resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
 }
 
 resource "aws_eks_cluster" "main" {
-  name     = var.cluster_name
+  name     = local.cluster_name
   role_arn = aws_iam_role.eks_cluster.arn
   version  = var.kubernetes_version
 
@@ -41,7 +45,7 @@ resource "aws_eks_cluster" "main" {
 }
 
 resource "aws_iam_role" "eks_node" {
-  name               = "${var.cluster_name}-node-role"
+  name               = "${local.cluster_name}-node-role"
   assume_role_policy = data.aws_iam_policy_document.eks_node_assume_role.json
   tags               = local.tags
 }
@@ -63,7 +67,7 @@ resource "aws_iam_role_policy_attachment" "ecr_read_only" {
 
 resource "aws_eks_node_group" "main" {
   cluster_name    = aws_eks_cluster.main.name
-  node_group_name = var.node_group_name
+  node_group_name = local.node_group_name
   node_role_arn   = aws_iam_role.eks_node.arn
   subnet_ids      = data.aws_subnets.default.ids
 
@@ -93,7 +97,7 @@ resource "aws_eks_node_group" "main" {
 resource "aws_budgets_budget" "monthly" {
   count = var.create_cost_budget ? 1 : 0
 
-  name              = "${var.cluster_name}-monthly-budget"
+  name              = "${local.cluster_name}-monthly-budget"
   budget_type       = "COST"
   limit_amount      = var.monthly_budget_limit_usd
   limit_unit        = "USD"
