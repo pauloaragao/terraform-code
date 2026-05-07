@@ -87,3 +87,9 @@ variable "budget_alert_email" {
   type    = string
   default = "eng.pauloaragao@gmail.com"
 }
+
+variable "prevent_destroy" {
+  description = "Impede destroy acidental dos recursos do modulo quando true"
+  type        = bool
+  default     = false
+}

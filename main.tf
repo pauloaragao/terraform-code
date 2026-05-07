@@ -26,6 +26,7 @@ module "ec2" {
   aws_region    = var.aws_region
   instance_name = var.ec2_instance_name
   instance_type = var.ec2_instance_type
+  prevent_destroy = var.ec2_prevent_destroy
 }
 
 # -----------------------------------------------------------------------------
@@ -40,6 +41,7 @@ module "rds" {
   db_username  = var.rds_db_username
   db_password  = var.rds_db_password
   allowed_cidr = var.rds_allowed_cidr
+  prevent_destroy = var.rds_prevent_destroy
 }
 
 # -----------------------------------------------------------------------------
@@ -51,6 +53,7 @@ module "lambda" {
 
   aws_region    = var.aws_region
   function_name = var.lambda_function_name
+  prevent_destroy = var.lambda_prevent_destroy
 }
 
 # -----------------------------------------------------------------------------
@@ -65,6 +68,7 @@ module "bedrock" {
   agent_alias_name  = var.bedrock_agent_alias_name
   foundation_model  = var.bedrock_foundation_model
   agent_instruction = var.bedrock_agent_instruction
+  prevent_destroy   = var.bedrock_prevent_destroy
 }
 
 # -----------------------------------------------------------------------------
@@ -80,4 +84,5 @@ module "eks" {
   desired_size       = var.eks_desired_size
   min_size           = var.eks_min_size
   max_size           = var.eks_max_size
+  prevent_destroy    = var.eks_prevent_destroy
 }

@@ -7,6 +7,10 @@ locals {
 resource "aws_iam_role" "ec2_ssm_role" {
   name = "ec2-ssm-role-${local.workspace_suffix}"
 
+  lifecycle {
+    prevent_destroy = var.prevent_destroy
+  }
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -23,12 +27,20 @@ resource "aws_iam_role" "ec2_ssm_role" {
 resource "aws_iam_role_policy_attachment" "ssm_core" {
   role       = aws_iam_role.ec2_ssm_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+
+  lifecycle {
+    prevent_destroy = var.prevent_destroy
+  }
 }
 
 # Instance Profile para a EC2
 resource "aws_iam_instance_profile" "ec2_ssm_profile" {
   name = "ec2-ssm-profile-${local.workspace_suffix}"
   role = aws_iam_role.ec2_ssm_role.name
+
+  lifecycle {
+    prevent_destroy = var.prevent_destroy
+  }
 }
 
 # Security Group (sem entrada pública; acesso via SSM)
@@ -36,6 +48,10 @@ resource "aws_security_group" "ec2_ssm" {
   name        = "ec2-ssm-only-${local.workspace_suffix}"
   description = "Sem entrada publica; acesso via SSM"
   vpc_id      = data.aws_vpc.default.id
+
+  lifecycle {
+    prevent_destroy = var.prevent_destroy
+  }
 
   egress {
     from_port   = 0
@@ -61,6 +77,10 @@ resource "aws_instance" "example" {
   tags = {
     Name      = var.instance_name
     ManagedBy = "Terraform"
+  }
+
+  lifecycle {
+    prevent_destroy = var.prevent_destroy
   }
 }
 

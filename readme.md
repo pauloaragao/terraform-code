@@ -212,6 +212,46 @@ terraform workspace show
 - Mantenha variáveis sensíveis fora do Git
 - Faça `plan` antes de `apply` em todos os ambientes
 
+## Proteção contra destroy (prevent_destroy)
+
+Todos os módulos agora possuem variável `prevent_destroy` com padrão `false`.
+
+- Valor padrão `false`: permite destruir recursos normalmente
+- Valor `true`: bloqueia destroy do recurso no Terraform (`lifecycle.prevent_destroy`)
+
+### Uso pela raiz (recomendado)
+
+No módulo raiz (`variables.tf`) foram adicionadas variáveis por módulo:
+
+- `ec2_prevent_destroy`
+- `rds_prevent_destroy`
+- `lambda_prevent_destroy`
+- `bedrock_prevent_destroy`
+- `eks_prevent_destroy`
+
+Exemplo em arquivo de ambiente (`terraform.dev.tfvars`):
+
+```hcl
+ec2_prevent_destroy     = true
+rds_prevent_destroy     = false
+lambda_prevent_destroy  = false
+bedrock_prevent_destroy = false
+eks_prevent_destroy     = false
+```
+
+### Uso direto no módulo
+
+Ao executar um módulo com `-chdir`, defina no `terraform.tfvars` do próprio módulo:
+
+```hcl
+prevent_destroy = true
+```
+
+Observação importante:
+
+- Se `prevent_destroy = true`, comandos `terraform destroy` (ou planos que removem recurso) vão falhar para os recursos protegidos.
+- Para permitir remoção, volte a variável para `false`, rode `plan` e depois execute o `apply/destroy`.
+
 ### Exemplo rápido de bootstrap completo
 
 ```powershell

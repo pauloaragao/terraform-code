@@ -14,11 +14,19 @@ resource "aws_iam_role" "eks_cluster" {
   name               = "${local.cluster_name}-cluster-role"
   assume_role_policy = data.aws_iam_policy_document.eks_cluster_assume_role.json
   tags               = local.tags
+
+  lifecycle {
+    prevent_destroy = var.prevent_destroy
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
   role       = aws_iam_role.eks_cluster.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+
+  lifecycle {
+    prevent_destroy = var.prevent_destroy
+  }
 }
 
 resource "aws_eks_cluster" "main" {
@@ -42,27 +50,47 @@ resource "aws_eks_cluster" "main" {
   depends_on = [aws_iam_role_policy_attachment.eks_cluster_policy]
 
   tags = local.tags
+
+  lifecycle {
+    prevent_destroy = var.prevent_destroy
+  }
 }
 
 resource "aws_iam_role" "eks_node" {
   name               = "${local.cluster_name}-node-role"
   assume_role_policy = data.aws_iam_policy_document.eks_node_assume_role.json
   tags               = local.tags
+
+  lifecycle {
+    prevent_destroy = var.prevent_destroy
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "worker_node_policy" {
   role       = aws_iam_role.eks_node.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+
+  lifecycle {
+    prevent_destroy = var.prevent_destroy
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "cni_policy" {
   role       = aws_iam_role.eks_node.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+
+  lifecycle {
+    prevent_destroy = var.prevent_destroy
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "ecr_read_only" {
   role       = aws_iam_role.eks_node.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPullOnly"
+
+  lifecycle {
+    prevent_destroy = var.prevent_destroy
+  }
 }
 
 resource "aws_eks_node_group" "main" {
@@ -82,6 +110,7 @@ resource "aws_eks_node_group" "main" {
   }
 
   lifecycle {
+    prevent_destroy = var.prevent_destroy
     ignore_changes = [scaling_config[0].desired_size]
   }
 
@@ -118,5 +147,9 @@ resource "aws_budgets_budget" "monthly" {
       notification_type          = "ACTUAL"
       subscriber_email_addresses = [var.budget_alert_email]
     }
+  }
+
+  lifecycle {
+    prevent_destroy = var.prevent_destroy
   }
 }

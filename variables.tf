@@ -50,6 +50,12 @@ variable "ec2_instance_type" {
   default     = "t3.micro"
 }
 
+variable "ec2_prevent_destroy" {
+  description = "Protege recursos do modulo EC2 contra destroy"
+  type        = bool
+  default     = false
+}
+
 # --- RDS ---
 
 variable "rds_db_name" {
@@ -77,12 +83,24 @@ variable "rds_allowed_cidr" {
   default     = "136.226.140.83/32"
 }
 
+variable "rds_prevent_destroy" {
+  description = "Protege recursos do modulo RDS contra destroy"
+  type        = bool
+  default     = false
+}
+
 # --- Lambda ---
 
 variable "lambda_function_name" {
   description = "Nome da função Lambda"
   type        = string
   default     = "my-python-lambda"
+}
+
+variable "lambda_prevent_destroy" {
+  description = "Protege recursos do modulo Lambda contra destroy"
+  type        = bool
+  default     = false
 }
 
 # --- Bedrock ---
@@ -109,6 +127,12 @@ variable "bedrock_agent_instruction" {
   description = "Instrução do Bedrock Agent (mínimo 40 caracteres)"
   type        = string
   default     = "You are a helpful assistant that answers user questions clearly and objectively."
+}
+
+variable "bedrock_prevent_destroy" {
+  description = "Protege recursos do modulo Bedrock contra destroy"
+  type        = bool
+  default     = false
 }
 
 # --- EKS ---
@@ -141,4 +165,10 @@ variable "eks_max_size" {
   description = "Máximo de nós (1-2)"
   type        = number
   default     = 1
+}
+
+variable "eks_prevent_destroy" {
+  description = "Protege recursos do modulo EKS contra destroy"
+  type        = bool
+  default     = false
 }

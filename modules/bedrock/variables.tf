@@ -33,3 +33,9 @@ variable "idle_session_ttl_in_seconds" {
   type    = number
   default = 600
 }
+
+variable "prevent_destroy" {
+  description = "Impede destroy acidental dos recursos do modulo quando true"
+  type        = bool
+  default     = false
+}

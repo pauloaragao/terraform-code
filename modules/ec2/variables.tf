@@ -12,3 +12,9 @@ variable "instance_type" {
   type    = string
   default = "t3.micro"
 }
+
+variable "prevent_destroy" {
+  description = "Impede destroy acidental dos recursos do modulo quando true"
+  type        = bool
+  default     = false
+}

@@ -27,3 +27,9 @@ variable "allowed_cidr" {
   type    = string
   default = "136.226.140.83/32"
 }
+
+variable "prevent_destroy" {
+  description = "Impede destroy acidental dos recursos do modulo quando true"
+  type        = bool
+  default     = false
+}

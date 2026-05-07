@@ -13,21 +13,25 @@ deploy_eks     = false
 # --- EC2 ---
 ec2_instance_name = "example-dev"
 ec2_instance_type = "t3.micro"
+ec2_prevent_destroy = false
 
 # --- RDS (obrigatório quando deploy_rds = true) ---
 rds_db_name      = "appdb"
 rds_db_username  = "appadmin"
 rds_db_password  = "SUBSTITUIR_SENHA_SEGURA"
 rds_allowed_cidr = "SEU_IP/32"
+rds_prevent_destroy = false
 
 # --- Lambda ---
 lambda_function_name = "my-python-lambda"
+lambda_prevent_destroy = false
 
 # --- Bedrock ---
 bedrock_agent_name        = "example-bedrock-agent"
 bedrock_agent_alias_name  = "dev"
 bedrock_foundation_model  = "amazon.nova-lite-v1:0"
 bedrock_agent_instruction = "You are a helpful assistant that answers user questions clearly and objectively."
+bedrock_prevent_destroy = false
 
 # --- EKS ---
 eks_cluster_name       = "eks-lab-min"
@@ -35,3 +39,4 @@ eks_node_capacity_type = "SPOT"
 eks_desired_size       = 1
 eks_min_size           = 0
 eks_max_size           = 1
+eks_prevent_destroy    = false

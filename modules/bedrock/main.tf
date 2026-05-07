@@ -6,12 +6,20 @@ locals {
 resource "aws_iam_role" "bedrock_agent" {
   name               = "AmazonBedrockExecutionRoleForAgents-${local.workspace_suffix}"
   assume_role_policy = data.aws_iam_policy_document.agent_trust.json
+
+  lifecycle {
+    prevent_destroy = var.prevent_destroy
+  }
 }
 
 resource "aws_iam_role_policy" "bedrock_agent" {
   name   = "bedrock-agent-model-access-${local.workspace_suffix}"
   role   = aws_iam_role.bedrock_agent.id
   policy = data.aws_iam_policy_document.agent_permissions.json
+
+  lifecycle {
+    prevent_destroy = var.prevent_destroy
+  }
 }
 
 resource "aws_bedrockagent_agent" "main" {
@@ -21,10 +29,18 @@ resource "aws_bedrockagent_agent" "main" {
   instruction                 = var.agent_instruction
   idle_session_ttl_in_seconds = var.idle_session_ttl_in_seconds
   prepare_agent               = true
+
+  lifecycle {
+    prevent_destroy = var.prevent_destroy
+  }
 }
 
 resource "aws_bedrockagent_agent_alias" "main" {
   agent_alias_name = var.agent_alias_name
   agent_id         = aws_bedrockagent_agent.main.agent_id
   description      = "Alias for ${local.agent_name}"
+
+  lifecycle {
+    prevent_destroy = var.prevent_destroy
+  }
 }
