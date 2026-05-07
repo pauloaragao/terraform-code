@@ -217,7 +217,7 @@ terraform workspace show
 Todos os módulos agora possuem variável `prevent_destroy` com padrão `false`.
 
 - Valor padrão `false`: permite destruir recursos normalmente
-- Valor `true`: bloqueia destroy do recurso no Terraform (`lifecycle.prevent_destroy`)
+- Valor `true`: ativa um recurso de guarda no módulo com `lifecycle.prevent_destroy = true`, bloqueando `destroy` do módulo
 
 ### Uso pela raiz (recomendado)
 
@@ -249,7 +249,7 @@ prevent_destroy = true
 
 Observação importante:
 
-- Se `prevent_destroy = true`, comandos `terraform destroy` (ou planos que removem recurso) vão falhar para os recursos protegidos.
+- Com `prevent_destroy = true`, comandos `terraform destroy` no módulo/ambiente falham por proteção ativa.
 - Para permitir remoção, volte a variável para `false`, rode `plan` e depois execute o `apply/destroy`.
 
 ### Exemplo rápido de bootstrap completo

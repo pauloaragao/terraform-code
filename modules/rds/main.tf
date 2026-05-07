@@ -2,13 +2,21 @@ locals {
   workspace_suffix = lower(terraform.workspace)
 }
 
+resource "terraform_data" "destroy_guard" {
+  count = var.prevent_destroy ? 1 : 0
+  input = {
+    module    = "rds"
+    workspace = terraform.workspace
+  }
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
 resource "aws_db_subnet_group" "main" {
   name       = "rds-free-tier-subnet-group-${local.workspace_suffix}"
   subnet_ids = data.aws_subnets.default.ids
-
-  lifecycle {
-    prevent_destroy = var.prevent_destroy
-  }
 
   tags = {
     Name      = "rds-free-tier-subnet-group-${local.workspace_suffix}"
@@ -20,10 +28,6 @@ resource "aws_security_group" "rds" {
   name        = "rds-free-tier-sg-${local.workspace_suffix}"
   description = "Permite conexao ao RDS pela porta 5432"
   vpc_id      = data.aws_vpc.default.id
-
-  lifecycle {
-    prevent_destroy = var.prevent_destroy
-  }
 
   ingress {
     description = "PostgreSQL from allowed CIDR"
@@ -71,9 +75,5 @@ resource "aws_db_instance" "free_tier" {
   tags = {
     Name      = "rds-free-tier-postgres-${local.workspace_suffix}"
     ManagedBy = "Terraform"
-  }
-
-  lifecycle {
-    prevent_destroy = var.prevent_destroy
   }
 }
