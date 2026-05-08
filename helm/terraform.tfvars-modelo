@@ -1,0 +1,16 @@
+# Copie para terraform.tfvars e ajuste os valores
+# terraform.tfvars e ignorado pelo Git (.gitignore)
+
+aws_region   = "us-east-1"
+cluster_name = "eks-lab-min"
+
+# --- Charts ---
+enable_metrics_server  = true
+enable_ingress_nginx   = true
+
+# Versoes dos charts - verifique atualizacoes em https://artifacthub.io
+metrics_server_version = "3.12.2"
+ingress_nginx_version  = "4.10.1"
+
+# --- Protecao ---
+prevent_destroy = false

@@ -314,6 +314,79 @@ Observação de custo: Bedrock é pay-per-use. Não tratar como custo zero.
 - Cria node group com suporte a `SPOT`
 - Mantém guardrails simples de custo nas variáveis do módulo
 
+## Helm — instalação de charts no cluster EKS
+
+O diretório `helm/` contém um módulo standalone que instala charts no cluster EKS criado pelo módulo `eks`.
+
+> **Por que standalone e não integrado ao root?**
+> O provider Helm precisa do endpoint do cluster para ser configurado,
+> e esse endpoint só existe depois que o EKS é criado. Por isso o fluxo
+> é sempre em dois passos: primeiro criar o EKS, depois instalar os charts.
+
+### Charts incluídos
+
+| Chart | Namespace | Finalidade |
+|---|---|---|
+| `metrics-server` | `kube-system` | Habilita `kubectl top` e HPA |
+| `ingress-nginx` | `ingress-nginx` | Cria NLB e IngressClass padrão |
+
+### Pré-requisitos
+
+- Cluster EKS já criado via módulo `eks`
+- `kubectl` e `aws` CLI configurados (`aws configure`)
+- kubeconfig atualizado: `aws eks update-kubeconfig --region us-east-1 --name <nome-do-cluster>`
+
+### Fluxo completo DEV
+
+```powershell
+# 1 — Criar o cluster EKS
+terraform workspace select DEV
+terraform apply -var-file "terraform.dev.tfvars"
+
+# 2 — Atualizar kubeconfig
+aws eks update-kubeconfig --region us-east-1 --name eks-lab-dev
+
+# 3 — Instalar os charts
+terraform -chdir=helm workspace new DEV
+terraform -chdir=helm workspace select DEV
+terraform -chdir=helm init
+terraform -chdir=helm apply -var-file="terraform.tfvars"
+```
+
+### Verificar instalação
+
+```powershell
+# Verificar metrics-server
+kubectl top nodes
+
+# Verificar LoadBalancer do ingress-nginx
+kubectl get svc -n ingress-nginx
+
+# Listar releases Helm instaladas
+helm list -A
+```
+
+### Destruir os charts (antes de destruir o cluster)
+
+```powershell
+terraform -chdir=helm workspace select DEV
+terraform -chdir=helm destroy -var-file="terraform.tfvars"
+
+terraform workspace select DEV
+terraform destroy -var-file "terraform.dev.tfvars"
+```
+
+### Variáveis disponíveis (`helm/variables.tf`)
+
+| Variável | Padrão | Descrição |
+|---|---|---|
+| `cluster_name` | `eks-lab-min` | Nome base do cluster (workspace é adicionado) |
+| `enable_metrics_server` | `true` | Liga/desliga o metrics-server |
+| `enable_ingress_nginx` | `true` | Liga/desliga o ingress-nginx |
+| `metrics_server_version` | `3.12.2` | Versão do chart |
+| `ingress_nginx_version` | `4.10.1` | Versão do chart |
+| `prevent_destroy` | `false` | Proteção contra destroy acidental |
+
 ## Policies IAM
 
 As policies para uso no console AWS ficam centralizadas em `policy-aws/`.
